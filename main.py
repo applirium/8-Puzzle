@@ -1,19 +1,20 @@
 from random import shuffle
 from copy import deepcopy
 from time import time
+import pandas
 
 
 class Node:
-    def __init__(self, table, parent, last):
-        self.right = None
-        self.left = None
+    def __init__(self, table, parent, last):        # Initialize a node with table configuration,
+        self.right = None                           # parent node, and last move direction.
+        self.left = None                            # Set up, down, left, and right pointers to other nodes.
         self.up = None
         self.down = None
         self.last = last
         self.table = table
         self.parent = parent
 
-    def path(self, reverse=False):
+    def path(self, reverse=False):                  # Return a list representing the path from the root to this node.
         path = []
         node = self
         while node is not None:
@@ -25,7 +26,7 @@ class Node:
 
         return path
 
-    def actions(self):
+    def actions(self):                              # Generate possible moves based on the current configuration.
         b = []
 
         for row in self.table:
@@ -33,28 +34,28 @@ class Node:
                 if i == "B":
                     b = [self.table.index(row), row.index(i)]
 
-        if b[1] != len(self.table) - 1:
+        if b[1] != len(self.table[0]) - 1:          # Create a new node for the right move
             new_table = deepcopy(self.table)
             new_table[b[0]][b[1]] = new_table[b[0]][(b[1] + 1)]
             new_table[b[0]][(b[1] + 1)] = "B"
             if not self.last == "LEFT" or self.last is None:
                 self.right = Node(new_table, self, "RIGHT")
 
-        if b[1] != 0:
+        if b[1] != 0:                               # Create a new node for the left move
             new_table = deepcopy(self.table)
             new_table[b[0]][b[1]] = new_table[b[0]][(b[1] - 1)]
             new_table[b[0]][(b[1] - 1)] = "B"
             if not self.last == "RIGHT" or self.last is None:
                 self.left = Node(new_table, self, "LEFT")
 
-        if b[0] != 0:
+        if b[0] != 0:                               # Create a new node for the up move
             new_table = deepcopy(self.table)
             new_table[b[0]][b[1]] = new_table[(b[0] - 1)][b[1]]
             new_table[(b[0] - 1)][b[1]] = "B"
             if not self.last == "DOWN" or self.last is None:
                 self.up = Node(new_table, self, "UP")
 
-        if b[0] != len(self.table[0]) - 1:
+        if b[0] != len(self.table) - 1:             # Create a new node for the down move
             new_table = deepcopy(self.table)
             new_table[b[0]][b[1]] = new_table[(b[0] + 1)][b[1]]
             new_table[(b[0] + 1)][b[1]] = "B"
@@ -62,21 +63,17 @@ class Node:
                 self.down = Node(new_table, self, "DOWN")
 
 
-def solvable(puzzle):
+def solvable(puzzle):                               # Determine if 3x3 puzzle is solvable by counting inversions.
     inversions = 0
     flattened = [num for row in puzzle for num in row if num != "B"]
     for i in range(len(flattened)):
         for j in range(i+1, len(flattened)):
             if flattened[i] > flattened[j]:
                 inversions += 1
-    if len(puzzle[0]) % 2 == 1:  # Odd width
-        return inversions % 2 == 0
-    else:  # Even width
-        blank_row = len(puzzle) - puzzle.index([0]*len(puzzle[0])) - 1
-        return (inversions + blank_row) % 2 == 0
+    return inversions % 2 == 0
 
 
-def table_gen(n=3, m=3, random=True):
+def table_gen(n=3, m=3, random=True):               # Generate a random or ordered table for the puzzle.
     temp = []
     node = []
     index = 0
@@ -97,7 +94,7 @@ def table_gen(n=3, m=3, random=True):
     return node
 
 
-def print_node(node):
+def print_node(node):                               # Print the node in a formatted manner.
     def ciferny_maximum(number):
         cif = 0
         try:
@@ -122,7 +119,7 @@ def print_node(node):
     print((("_" * (5 + cif_max)) * m) + "_")
 
 
-def addon(node, object_queue, object_visited):
+def addon(node, object_queue, object_visited):      # Add valid child nodes to the queue for further exploration.
     if node.left is None and node.right is None and node.up is None and node.down is None:
         node.actions()
 
@@ -133,7 +130,7 @@ def addon(node, object_queue, object_visited):
     object_visited.add(node)
 
 
-def bidirectional_search(start, final):
+def bidirectional_search(start, final):             # Perform bidirectional search to find a solution.
     forward_queue = []
     backward_queue = []
     forward_visited = set()
@@ -160,21 +157,75 @@ def bidirectional_search(start, final):
         iteration += 2
 
 
-while True:
-    generated_table = table_gen()
-    if solvable(generated_table):
+def one_iteration():
+    while True:
+        generated_table = table_gen()
+        if solvable(generated_table):                   # Generate a solvable puzzle and create start and end states.
 
-        first_state = Node(generated_table, None, None)
-        end_state = Node(table_gen(random=False), None, None)
+            first_state = Node(generated_table, None, None)
+            end_state = Node(table_gen(random=False), None, None)
 
-        start_time = time()
-        ui_path, iterations = bidirectional_search(first_state, end_state)
-        end_time = time()
+            start_time = time()                         # Measure execution time and find the solution path.
+            ui_path, iterations = bidirectional_search(first_state, end_state)
+            end_time = time()
 
-        for turn in ui_path:
-            print_node(turn)
+            return [ui_path, iterations, round(end_time - start_time,3), len(ui_path) - 1]
 
-        print(f"Iterations: {iterations}")
-        print(f"Time of execution: {end_time - start_time}")
-        print(f"Length of path: {len(ui_path) - 1}")
-        break
+
+def avg(lst, index, num):                               # Calculate average of a specific index in a list of lists.
+    temp = 0
+    for i in lst:
+        temp += i[index]
+
+    return temp/num
+
+
+def test(number):                                       # Run tests and save results to an Excel file.
+    results = []
+    for i in range(number):
+        results.append(one_iteration())
+    df = pandas.DataFrame(results, columns=["object","iterations", "time", "path length"])
+    df.to_excel('xls/list.xlsx', index=False)
+
+    print("Write help to get list of commands")
+    while True:
+        decision = input("Action: ").lower()
+        if decision == "average":
+            print(f"Average iterations: {int(avg(results,1,number))}")
+            print(f"Average time of execution: {round(avg(results,2,number),2)}")
+            print(f"Average length of path: {round(avg(results,3,number),2)}")
+
+        elif decision == "path":
+            decision_number = 0
+            while True:
+                try:
+                    decision_number = int(input("Number of test: "))
+                except ValueError:
+                    print("Enter integer")
+                    continue
+
+                if number > decision_number > -1:
+                    break
+
+                print("Enter integer in range of test")
+
+            for turn in results[decision_number][0]:
+                print_node(turn)
+
+            print(f"Iterations: {results[decision_number][1]}")
+            print(f"Time of execution: {results[decision_number][2]}")
+            print(f"Length of path: {results[decision_number][3]}")
+
+        elif decision == "help":
+            print("average returns statistics of all paths")
+            print("path returns solution of puzzle with statistics")
+            print("exit will end the program")
+
+        elif decision == "exit":
+            break
+
+        else:
+            print("Wrong input")
+
+
+test(1000)
