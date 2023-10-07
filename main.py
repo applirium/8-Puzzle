@@ -139,10 +139,13 @@ def bidirectional_search(start, final):             # Perform bidirectional sear
     forward_queue.append(start)
     backward_queue.append(final)
 
-    iteration = 2
+    iteration = 0
     while not len(forward_queue) == 0 and not len(backward_queue) == 0:
         forward_current = forward_queue.pop(0)
         backward_current = backward_queue.pop(0)
+
+        addon(forward_current, forward_queue, forward_visited)
+        addon(backward_current, backward_queue, backward_visited)
 
         for state in backward_visited:
             if state.table == forward_current.table:
@@ -151,10 +154,7 @@ def bidirectional_search(start, final):             # Perform bidirectional sear
         for state in forward_visited:
             if state.table == backward_current.table:
                 return state.path()[:-1] + backward_current.path(True), iteration
-
-        addon(forward_current, forward_queue, forward_visited)
-        addon(backward_current, backward_queue, backward_visited)
-        iteration += 2
+        iteration += 4
 
 
 def one_iteration():
@@ -169,7 +169,7 @@ def one_iteration():
             ui_path, iterations = bidirectional_search(first_state, end_state)
             end_time = time()
 
-            return [ui_path, iterations, round(end_time - start_time,3), len(ui_path) - 1]
+            return [ui_path, iterations, round(end_time - start_time, 3), len(ui_path) - 1]
 
 
 def avg(lst, index, num):                               # Calculate average of a specific index in a list of lists.
@@ -184,7 +184,7 @@ def test(number):                                       # Run tests and save res
     results = []
     for i in range(number):
         results.append(one_iteration())
-    df = pandas.DataFrame(results, columns=["object","iterations", "time", "path length"])
+    df = pandas.DataFrame(results, columns=["object", "iterations", "time", "path length"])
     df.to_excel('xls/list.xlsx', index=False)
 
     print("Write help to get list of commands")
@@ -199,7 +199,7 @@ def test(number):                                       # Run tests and save res
             decision_number = 0
             while True:
                 try:
-                    decision_number = int(input("Number of test: "))
+                    decision_number = int(input("Number of test: ")) - 1
                 except ValueError:
                     print("Enter integer")
                     continue
@@ -209,9 +209,12 @@ def test(number):                                       # Run tests and save res
 
                 print("Enter integer in range of test")
 
+            directions = []
             for turn in results[decision_number][0]:
                 print_node(turn)
+                directions.append(turn.last)
 
+            print(f"Directions: {', '.join(directions[1:-2])}")
             print(f"Iterations: {results[decision_number][1]}")
             print(f"Time of execution: {results[decision_number][2]}")
             print(f"Length of path: {results[decision_number][3]}")
@@ -228,4 +231,4 @@ def test(number):                                       # Run tests and save res
             print("Wrong input")
 
 
-test(1000)
+test(10)
