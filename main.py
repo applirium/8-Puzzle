@@ -119,18 +119,17 @@ def print_node(node):                               # Print the node in a format
     print((("_" * (5 + cif_max)) * m) + "_")
 
 
-def addon(node, object_queue, object_visited):      # Add valid child nodes to the queue for further exploration.
-    if node.left is None and node.right is None and node.up is None and node.down is None:
-        node.actions()
-
-    for obj in [node.right, node.left, node.up, node.down]:
-        if obj is not None:
-            object_queue.append(obj)
-
-    object_visited.add(node)
-
-
 def bidirectional_search(start, final):             # Perform bidirectional search to find a solution.
+    def addon(node, object_queue, object_visited):  # Add valid child nodes to the queue for further exploration.
+        if node.left is None and node.right is None and node.up is None and node.down is None:
+            node.actions()
+
+        for obj in [node.right, node.left, node.up, node.down]:
+            if obj is not None:
+                object_queue.append(obj)
+
+        object_visited.add(node)
+
     forward_queue = []
     backward_queue = []
     forward_visited = set()
@@ -154,12 +153,12 @@ def bidirectional_search(start, final):             # Perform bidirectional sear
         for state in forward_visited:
             if state.table == backward_current.table:
                 return state.path()[:-1] + backward_current.path(True), iteration
-        iteration += 4
+        iteration += 2
 
 
 def one_iteration():
     while True:
-        generated_table = table_gen()
+        generated_table = table_gen()                   # [[8,6,7],[2,5,4],[3,"B",1]] 31 length
         if solvable(generated_table):                   # Generate a solvable puzzle and create start and end states.
 
             first_state = Node(generated_table, None, None)
