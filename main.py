@@ -186,7 +186,7 @@ def test(number):                                       # Run tests and save res
     df = pandas.DataFrame(results, columns=["object", "iterations", "time", "path length"])
     df.to_excel('xls/list.xlsx', index=False)
 
-    print("Write help to get list of commands")
+    print("AVERAGE | PATH | EXIT | HELP")
     while True:
         decision = input("Action: ").lower()
         if decision == "average":
@@ -230,4 +230,5 @@ def test(number):                                       # Run tests and save res
             print("Wrong input")
 
 
-test(10)
+int_input = int(input("How many iterations would you like to have: "))
+test(int_input)
